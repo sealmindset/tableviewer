@@ -1,0 +1,61 @@
+import React, { useState } from 'react';
+import './App.css';
+import axios from 'axios';
+import FileUploader from './FileUploader';
+import DataTable from './DataTable';
+
+function App() {
+  const [data, setData] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [file, setFile] = useState(null);
+
+  const handleDataUpload = (uploadedData) => {
+    setData(uploadedData);
+  };
+
+  const handleUpload = async () => {
+    if (!file) {
+      setError('Please select a file to upload.');
+      return;
+    }
+
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const response = await axios.post('http://localhost:5555/api/upload', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+
+      handleDataUpload(response.data);
+    } catch (error) {
+      console.error('Error uploading file:', error);
+      setError('An error occurred while uploading the file. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <div className="App">
+      <FileUploader
+        onDataUpload={handleDataUpload}
+        onUploadError={(errorMessage) => setError(errorMessage)}
+      />
+      {error && <div className="error">{error}</div>}
+      {isLoading ? (
+        <div className="loading">Uploading...</div>
+      ) : (
+        <DataTable data={data} />
+      )}
+    </div>
+  );
+}
+
+export default App;

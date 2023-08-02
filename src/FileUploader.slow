@@ -1,0 +1,53 @@
+import React, { useState } from 'react';
+import PropTypes from 'prop-types';
+import axios from 'axios';
+
+const FileUploader = ({ onDataUpload, onUploadError }) => {
+  const [file, setFile] = useState(null);
+
+  const handleFileChange = (event) => {
+    console.log('FileUploader: File selected:', event.target.files[0]);
+    setFile(event.target.files[0]);
+    onUploadError(null);
+  };
+
+  const handleUpload = async () => {
+    if (!file) {
+      console.error('FileUploader: Please select a file.');
+      onUploadError('Please select a file.');
+      return;
+    }
+
+    try {
+      console.log('FileUploader: Uploading file...');
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const response = await axios.post('http://localhost:5555/api/upload', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+
+      console.log('FileUploader: File uploaded successfully:', response.data);
+      onDataUpload(response.data);
+    } catch (error) {
+      console.error('FileUploader: Error uploading file:', error);
+      onUploadError('An error occurred while uploading the file. Please try again.');
+    }
+  };
+
+  return (
+    <div>
+      <input type="file" accept=".csv,.json" onChange={handleFileChange} />
+      <button onClick={handleUpload}>Upload</button>
+    </div>
+  );
+};
+
+FileUploader.propTypes = {
+  onDataUpload: PropTypes.func.isRequired,
+  onUploadError: PropTypes.func.isRequired,
+};
+
+export default FileUploader;
